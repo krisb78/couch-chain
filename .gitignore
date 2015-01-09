@@ -1,0 +1,4 @@
+build/*
+couch_chain.egg-info/*
+dist/*
+*.pyc
