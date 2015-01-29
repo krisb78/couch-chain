@@ -18,5 +18,6 @@ setup(
         'requests',
         'urllib3',
         'wsgiref',
+        'redis',
     ]
 )
