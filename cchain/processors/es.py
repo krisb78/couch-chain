@@ -29,6 +29,7 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
             self
         ).__init__(es_urls, es_index, **kwargs)
 
+        self._retry_on_conflict = kwargs.pop('retry_on_conflict', 3)
         self._es_type = es_type
 
     def process_changes(self, changes_buffer):
@@ -44,31 +45,17 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
         if not processed_docs:
             return processed_docs, last_seq
 
-        bulk_data = []
+        bulk_ops = []
 
         for doc in processed_docs:
-            op_data = {
-                '_id': doc['_id'],
-                '_type': self._es_type,
-                '_index': self._es_index,
-            }
-            if doc.get('_deleted'):
-                op_dict = {
-                    'delete': op_data,
-                }
-                bulk_data.append(op_dict)
-            else:
-                op_dict = {
-                    'index': op_data,
-                }
-                bulk_data.append(op_dict)
-                bulk_data.append(doc)
+            doc_ops = self.get_ops_for_bulk(doc)
+            bulk_ops += doc_ops
 
         error = False
 
         try:
             return_value = self._es.bulk(
-                bulk_data,
+                bulk_ops,
                 refresh=True
             )
         except:
@@ -83,3 +70,44 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
             raise exceptions.ProcessingError
 
         return processed_docs, last_seq
+
+    def get_ops_for_bulk(self, doc):
+        """Returns a list of operations to be performed in elasticsearch
+        for the given document. By default, the document is "upserted".
+        Override this if you need to merge your documents in a fancier way.
+
+        :param doc: Document to be processed.
+
+        :returns: a list of elasticsearch operations that can be passed
+            into the bulk api.
+
+        """
+
+        ops = []
+
+        op_data = {
+            '_id': doc['_id'],
+            '_type': self._es_type,
+            '_index': self._es_index,
+        }
+
+        if doc.get('_deleted'):
+            op_dict = {
+                'delete': op_data,
+            }
+            ops.append(op_dict)
+        else:
+            op_data.update({
+                '_retry_on_conflict': self._retry_on_conflict
+            })
+            op_dict = {
+                'update': op_data,
+            }
+            ops.append(op_dict)
+            data_dict = {
+                'doc': doc,
+                'doc_as_upsert': True
+            }
+            ops.append(data_dict)
+
+        return ops

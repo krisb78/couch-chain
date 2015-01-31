@@ -60,7 +60,11 @@ class RedisEntityProcessor(base.BaseChangesProcessor):
         redis_server = self._redis_server
         source_set_name = self._source_set_name
         redis_server.zadd(source_set_name, *set_elements)
-        redis_server.zunionstore(self._target_set_name, [source_set_name])
+        redis_server.zunionstore(
+            self._target_set_name,
+            [source_set_name],
+            aggregate='MIN'
+        )
         redis_server.delete([source_set_name])
 
         return entity_ids, last_seq
