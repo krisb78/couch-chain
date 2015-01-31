@@ -19,5 +19,11 @@ setup(
         'urllib3',
         'wsgiref',
         'redis',
+    ],
+    dependency_links=[
+        (
+            '-e git+https://github.com/krisb78/py-couchdb.git'
+            '@73531531f0f939a7cce90d0eddea9c843b43aff5#egg=pycouchdb'
+        ),
     ]
 )
