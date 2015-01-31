@@ -26,8 +26,7 @@ class ChangesFeedReader(pycouchdb.feedreader.BaseFeedReader):
 
         self._buffer = []
 
-    def on_message(self, change_line):
-
+    def process_change_line(self, change_line):
         change = change_line.get('changes')
 
         if change is None:
@@ -45,9 +44,16 @@ class ChangesFeedReader(pycouchdb.feedreader.BaseFeedReader):
         if (len(self._buffer) >= self._limit) or waits_too_long:
             self.flush_buffer()
 
-    def on_heartbeat(self):
+    def process_heartbeat(self):
         logger.debug('Heartbeat received.')
         self.flush_buffer()
+
+    def on_message(self, change_line):
+        logger.debug('Change received: %s', change_line)
+        self.process_change_line(change_line)
+
+    def on_heartbeat(self):
+        self.process_heartbeat()
 
     def flush_buffer(self):
         if not self._buffer:
@@ -70,6 +76,8 @@ class ChangesFeedReader(pycouchdb.feedreader.BaseFeedReader):
 
 
 class BaseChangesConsumer(object):
+
+    feed_reader_class = ChangesFeedReader
 
     def __init__(
         self,
@@ -115,20 +123,20 @@ class BaseChangesConsumer(object):
 
         self._buffer = []
 
-    def consume(self):
-        """Processes the changes stream.
-
-        """
-
-        last_seq = self._seqtracker.get_seq()
-
-        feed_reader = ChangesFeedReader(
+        self._feed_reader = self.feed_reader_class(
             limit=self._limit,
             flush_interval=self._flush_interval,
             processor=self._processor,
             seqtracker=self._seqtracker
 
         )
+
+    def consume(self):
+        """Processes the changes stream.
+
+        """
+
+        last_seq = self._seqtracker.get_seq()
 
         feed_kwargs = self._feed_kwargs
 
@@ -138,10 +146,10 @@ class BaseChangesConsumer(object):
             })
 
         self._couchdb.changes_feed(
-            feed_reader,
+            self._feed_reader,
             **feed_kwargs
         )
 
-        feed_reader.flush_buffer()
+        self._feed_reader.flush_buffer()
 
         self._seqtracker.cleanup()
