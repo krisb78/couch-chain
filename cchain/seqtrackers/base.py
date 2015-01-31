@@ -51,7 +51,7 @@ class FilebasedSeqTracker(object):
         seq_file.write(str(seq))
         seq_file.truncate()
         seq_file.flush()
-        logger.debug('Put seq: %s', seq)
+        logger.info('Put seq: %s', seq)
 
     def get_seq(self):
 
@@ -60,7 +60,7 @@ class FilebasedSeqTracker(object):
         seq_file.seek(0)
         seq = seq_file.read()
 
-        logger.debug('Got seq: %s', seq)
+        logger.info('Got seq: %s', seq)
 
         return seq
 
