@@ -32,6 +32,30 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
         self._retry_on_conflict = kwargs.pop('retry_on_conflict', 3)
         self._es_type = es_type
 
+    def get_index(self, doc):
+        """Override this to send documents do various indices, depending
+        on the content.
+
+        :param doc: the document to be indexed.
+
+        :returns: tne name of the index that the document will be sent to.
+
+        """
+
+        return self._es_index
+
+    def get_type(self, doc):
+        """Override this to change the type that the document will receive
+        in elasticsearch.
+
+        :param doc: the document to index.
+
+        :returns: the type to assign to the document in ES.
+
+        """
+
+        return self._es_type
+
     def process_changes(self, changes_buffer):
         """Sticks the processed documents into elasticsearch.
 
@@ -87,8 +111,8 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
 
         op_data = {
             '_id': doc['_id'],
-            '_type': self._es_type,
-            '_index': self._es_index,
+            '_type': self.get_type(doc),
+            '_index': self.get_index(doc),
         }
 
         if doc.get('_deleted'):
