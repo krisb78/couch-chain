@@ -23,7 +23,7 @@ setup(
     dependency_links=[
         (
             '-e git+https://github.com/krisb78/py-couchdb.git'
-            '@73531531f0f939a7cce90d0eddea9c843b43aff5#egg=pycouchdb'
+            '@36e117fa58324400f5e99a6e9fa3abec2362f607#egg=pycouchdb'
         ),
     ]
 )
