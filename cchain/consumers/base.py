@@ -74,6 +74,9 @@ class ChangesFeedReader(pycouchdb.feedreader.BaseFeedReader):
 
         self._buffer = []
 
+    def cleanup(self):
+        self.flush_buffer()
+
 
 class BaseChangesConsumer(object):
 
@@ -150,6 +153,6 @@ class BaseChangesConsumer(object):
             **feed_kwargs
         )
 
-        self._feed_reader.flush_buffer()
+        self._feed_reader.cleanup()
 
         self._seqtracker.cleanup()

@@ -11,7 +11,7 @@ class MPFeedReader(base.ChangesFeedReader):
 
     def __init__(self, **kwargs):
 
-        self.changes_in, self.changes_out = multiprocessing.Pipe()
+        self._changes_in, self._changes_out = multiprocessing.Pipe()
 
         super(
             MPFeedReader,
@@ -25,13 +25,13 @@ class MPFeedReader(base.ChangesFeedReader):
         self._reader_process.start()
 
     def read_changes(self):
-        """Reads changes from self.changes_out and processes them as normal.
+        """Reads changes from self._changes_out and processes them as normal.
 
         """
 
         while True:
             try:
-                change_line = self.changes_out.recv()
+                change_line = self._changes_out.recv()
             except EOFError:
                 break
 
@@ -41,12 +41,19 @@ class MPFeedReader(base.ChangesFeedReader):
                 self.process_change_line(change_line)
 
     def on_message(self, change_line):
-        self.changes_in.send(change_line)
+        self._changes_in.send(change_line)
 
     def on_heartbeat(self):
-        self.changes_in.send('')
+        self._changes_in.send('')
 
-    def wait_for_reader(self):
+    def cleanup(self):
+        super(
+            MPFeedReader,
+            self
+        ).cleanup()
+
+        self._changes_in.close()
+
         self._reader_process.join()
 
 
@@ -57,12 +64,3 @@ class MPChangesConsumer(base.BaseChangesConsumer):
     """
 
     feed_reader_class = MPFeedReader
-
-    def consume(self):
-
-        super(
-            MPChangesConsumer,
-            self
-        ).consume()
-
-        self._feed_reader.wait_for_reader()
