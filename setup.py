@@ -11,6 +11,8 @@ setup(
     packages=['cchain'],
     zip_safe=False,
     install_requires=[
+        'boto',
+        'futures',
         'elasticsearch',
         'gnureadline',
         'ipython',

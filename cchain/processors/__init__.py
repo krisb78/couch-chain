@@ -2,6 +2,7 @@ from . import base
 from . import couchdb
 from . import entity
 from . import es
+from . import s3
 
 
 __all__ = [
@@ -9,4 +10,5 @@ __all__ = [
     'couchdb',
     'es',
     'entity',
+    's3',
 ]
