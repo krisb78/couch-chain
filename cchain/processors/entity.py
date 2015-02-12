@@ -40,6 +40,15 @@ class RedisEntityProcessor(base.BaseChangesProcessor):
             db=redis_db
         )
 
+    def process_change_line(self, change_line):
+        """Returns the id of the document affected by the change.
+
+        """
+
+        doc_id = change_line.get('id')
+
+        return doc_id
+
     def process_changes(self, changes_buffer):
 
         entity_ids, last_seq = super(

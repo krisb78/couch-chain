@@ -1,7 +1,10 @@
 import copy
+import logging
+
+import boto
+import concurrent
 import elasticsearch
 import pycouchdb
-import logging
 
 
 logger = logging.getLogger(__name__)
@@ -32,13 +35,7 @@ class BaseChangesProcessor(object):
         return processed_items, last_seq
 
     def process_change_line(self, change_line):
-        """Returns the id of the document affected by the change.
-
-        """
-
-        doc_id = change_line.get('id')
-
-        return doc_id
+        raise NotImplementedError
 
 
 class BaseDocChangesProcessor(BaseChangesProcessor):
@@ -66,9 +63,11 @@ class BaseDocChangesProcessor(BaseChangesProcessor):
 
         if original_doc is None:
             if change_line.get('deleted'):
+                rev = change_line['changes'][0]['rev']
                 doc = {
                     '_id': change_line['id'],
-                    '_deleted': True
+                    '_deleted': True,
+                    '_rev': rev,
                 }
             else:
                 logger.info('Skipping change line: %s', change_line)
@@ -124,3 +123,33 @@ class BaseCouchdbChangesProcessor(BaseDocChangesProcessor):
 
         target_server = pycouchdb.Server(target_couchdb_uri)
         self._target_couchdb = target_server.database(target_couchdb_name)
+
+
+class BaseS3ChangesProcessor(BaseDocChangesProcessor):
+
+    def __init__(
+        self,
+        bucket_name,
+        max_workers=None,
+        **kwargs
+    ):
+
+        super(
+            BaseS3ChangesProcessor,
+            self
+        ).__init__(**kwargs)
+
+        conn = boto.connect_s3()
+
+        bucket = conn.get_bucket(bucket_name)
+
+        self._bucket = bucket
+
+        # There's no "bulk put" is s3, so create an executor for uploading
+        # documents in parallel to s3
+        self._executor = concurrent.futures.ThreadPoolExecutor(
+            max_workers=max_workers
+        )
+
+    def cleanup(self):
+        self._executor.shutdown()
