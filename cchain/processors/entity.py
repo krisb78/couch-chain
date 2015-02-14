@@ -45,13 +45,18 @@ class RedisEntityProcessor(base.BaseChangesProcessor):
 
         """
 
+        (change_line, rev, seq, ) = super(
+            RedisEntityProcessor,
+            self
+        ).process_change_line(change_line)
+
         doc_id = change_line.get('id')
 
-        return doc_id
+        return (doc_id, rev, seq, )
 
     def process_changes(self, changes_buffer):
 
-        entity_ids, last_seq = super(
+        processed_changes, last_seq = super(
             RedisEntityProcessor,
             self
         ).process_changes(changes_buffer)
@@ -60,7 +65,7 @@ class RedisEntityProcessor(base.BaseChangesProcessor):
         timestamp = time.mktime(now.timetuple())
 
         set_elements = []
-        for entity_id in entity_ids:
+        for (entity_id, rev, seq, ) in processed_changes:
             set_elements += [
                 timestamp,
                 entity_id,
@@ -76,4 +81,4 @@ class RedisEntityProcessor(base.BaseChangesProcessor):
         )
         redis_server.delete([source_set_name])
 
-        return entity_ids, last_seq
+        return processed_changes, last_seq
