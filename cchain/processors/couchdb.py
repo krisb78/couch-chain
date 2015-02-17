@@ -40,15 +40,20 @@ class SimpleCouchdbChangesProcessor(base.BaseCouchdbChangesProcessor):
 
         """
 
-        processed_docs, last_seq = super(
+        processed_items, last_seq = super(
             SimpleCouchdbChangesProcessor,
             self
         ).process_changes(changes_buffer)
 
-        if not processed_docs:
-            return processed_docs, last_seq
+        if not processed_items:
+            return processed_items, last_seq
 
-        doc_ids = [doc['_id'] for doc in processed_docs]
+        doc_ids = []
+        processed_docs = []
+
+        for (doc, rev, seq, ) in processed_items:
+            doc_ids.append(doc['_id'])
+            processed_docs.append(doc)
 
         existing_results = self._target_couchdb.all(
             keys=doc_ids
@@ -79,4 +84,4 @@ class SimpleCouchdbChangesProcessor(base.BaseCouchdbChangesProcessor):
         if error:
             raise exceptions.ProcessingError
 
-        return processed_docs, last_seq
+        return processed_items, last_seq

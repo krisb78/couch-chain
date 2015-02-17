@@ -61,17 +61,17 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
 
         """
 
-        processed_docs, last_seq = super(
+        processed_changes, last_seq = super(
             SimpleESChangesProcessor,
             self
         ).process_changes(changes_buffer)
 
-        if not processed_docs:
-            return processed_docs, last_seq
+        if not processed_changes:
+            return processed_changes, last_seq
 
         bulk_ops = []
 
-        for doc in processed_docs:
+        for (doc, rev, seq, ) in processed_changes:
             doc_ops = self.get_ops_for_bulk(doc)
             bulk_ops += doc_ops
 
@@ -93,7 +93,7 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
         if error:
             raise exceptions.ProcessingError
 
-        return processed_docs, last_seq
+        return processed_changes, last_seq
 
     def get_ops_for_bulk(self, doc):
         """Returns a list of operations to be performed in elasticsearch

@@ -19,24 +19,44 @@ class BaseChangesProcessor(object):
         :param changes_buffer: the list of changes fetched from the _changes
             stream.
 
-        :returns: the list of processed docs.
+        :returns: a tuple comprising:
+            - a list of (processed_item, rev, seq) tuples
+            - the last "seq".
 
         """
 
         processed_items = []
 
+        seq = None
+
         for change_line in changes_buffer:
-            item = self.process_change_line(change_line)
+            item, rev, seq = self.process_change_line(change_line)
 
             if item is not None:
-                processed_items.append(item)
+                processed_items.append(
+                    (item, rev, seq,)
+                )
 
-        last_seq = changes_buffer[-1]['seq']
-
-        return processed_items, last_seq
+        return (processed_items, seq, )
 
     def process_change_line(self, change_line):
-        raise NotImplementedError
+        """Override this to proces your changes.
+
+        :param change_line: a dict describing the change fetched from the
+            _changes stream. Refer to couchdb docs for details on the format.
+
+        :returns: a tuple with a processed data item and the corresponding
+            revision and sequence "number", i.e., (item, rev, seq). This base
+            method returns the original change_line as the data item, without
+            making any changes to it.
+
+        """
+
+        seq = change_line['seq']
+
+        rev = change_line['changes'][0]['rev']
+
+        return (change_line, rev, seq, )
 
 
 class BaseDocChangesProcessor(BaseChangesProcessor):
@@ -55,16 +75,25 @@ class BaseDocChangesProcessor(BaseChangesProcessor):
         """Processes a single change line. Override this to modify how each
         document returned with a change line is processed.
 
-        :returns: the document extracted from the line, with the relevant
-            change sequence injected to it, if needed.
+        :returns: a tuple comprising the document extracted from the line, (
+            with the relevant change sequence injected to it, if needed),
+            the revision and the sequence "number".
+
+        .. Note: The revision of the document may be different to the revision
+            returned explicilty in the return value. Consult couchdb
+            documentation for details.
 
         """
+
+        (change_line, rev, seq) = super(
+            BaseDocChangesProcessor,
+            self
+        ).process_change_line(change_line)
 
         original_doc = change_line.get('doc')
 
         if original_doc is None:
             if change_line.get('deleted'):
-                rev = change_line['changes'][0]['rev']
                 doc = {
                     '_id': change_line['id'],
                     '_deleted': True,
@@ -79,12 +108,10 @@ class BaseDocChangesProcessor(BaseChangesProcessor):
         seq_property = self._seq_property
 
         if seq_property is not None:
-            seq = change_line.get('seq')
-
             if seq is not None:
                 doc[seq_property] = seq
 
-        return doc
+        return (doc, rev, seq, )
 
 
 class BaseESChangesProcessor(BaseDocChangesProcessor):
@@ -145,9 +172,11 @@ class BaseS3ChangesProcessor(BaseDocChangesProcessor):
         :param bucket_name: the name of the s3 bucket to upload documents to.
         :param aws_access_key_id: the AWS access key id.
         :param aws_secret_access_key: the AWS secret access key.
-        :param max_workers: the maximum number of thread to run futures on.
+        :param max_workers: the maximum number of threads to run futures on.
             Don't set to None or it will hang (at least on macosx).
+
         """
+
         super(
             BaseS3ChangesProcessor,
             self
