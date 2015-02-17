@@ -40,18 +40,29 @@ class SimpleCouchdbChangesProcessor(base.BaseCouchdbChangesProcessor):
 
         """
 
-        processed_items, last_seq = super(
+        processed_changes, last_seq = super(
             SimpleCouchdbChangesProcessor,
             self
         ).process_changes(changes_buffer)
 
-        if not processed_items:
-            return processed_items, last_seq
+        if not processed_changes:
+            return processed_changes, last_seq
+
+        self.bulk_save_changes(processed_changes)
+
+        return processed_changes, last_seq
+
+    def bulk_save_changes(self, processed_changes):
+        """Saves the processed changes in bulk.
+
+        :param processed_changes: a list of (doc, rev, seq) tuples.
+
+        """
 
         doc_ids = []
         processed_docs = []
 
-        for (doc, rev, seq, ) in processed_items:
+        for (doc, rev, seq, ) in processed_changes:
             doc_ids.append(doc['_id'])
             processed_docs.append(doc)
 
@@ -84,4 +95,4 @@ class SimpleCouchdbChangesProcessor(base.BaseCouchdbChangesProcessor):
         if error:
             raise exceptions.ProcessingError
 
-        return processed_items, last_seq
+
