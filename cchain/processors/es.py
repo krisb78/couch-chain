@@ -69,6 +69,17 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
         if not processed_changes:
             return processed_changes, last_seq
 
+        self.bulk_save_changes(processed_changes)
+
+        return processed_changes, last_seq
+
+    def bulk_save_changes(self, processed_changes):
+        """Stores the processed changes in es.
+
+        :param processed_changes: a list of (doc, rev, seq) tuples.
+
+        """
+
         bulk_ops = []
 
         for (doc, rev, seq, ) in processed_changes:
@@ -92,8 +103,6 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
 
         if error:
             raise exceptions.ProcessingError
-
-        return processed_changes, last_seq
 
     def get_ops_for_bulk(self, doc):
         """Returns a list of operations to be performed in elasticsearch
