@@ -94,5 +94,3 @@ class SimpleCouchdbChangesProcessor(base.BaseCouchdbChangesProcessor):
 
         if error:
             raise exceptions.ProcessingError
-
-
