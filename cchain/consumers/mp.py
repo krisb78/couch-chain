@@ -24,10 +24,17 @@ class MPFeedReader(base.ChangesFeedReader):
 
         self._reader_process.start()
 
+        # The main process will only write to the pipe, so close the
+        # output end.
+        self._changes_out.close()
+
     def read_changes(self):
         """Reads changes from self._changes_out and processes them as normal.
 
         """
+
+        # Close the input end, because we will read from the pipe here.
+        self._changes_in.close()
 
         while True:
             try:
