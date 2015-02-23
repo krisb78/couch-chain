@@ -31,7 +31,7 @@ setuptools.setup(
     ],
     dependency_links=[
         (
-            '-e git+https://github.com/krisb78/py-couchdb.git'
+            'git+https://github.com/krisb78/py-couchdb.git'
             '@b49240eed98258690ad8e4d9b3247269f7e8c007#egg=pycouchdb'
         ),
     ],
