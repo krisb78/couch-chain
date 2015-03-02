@@ -32,7 +32,7 @@ setuptools.setup(
     dependency_links=[
         (
             'git+https://github.com/krisb78/py-couchdb.git'
-            '@b49240eed98258690ad8e4d9b3247269f7e8c007#egg=pycouchdb'
+            '@4e1b81e83582e04eb5300649ac54fdc798a9044a#egg=pycouchdb'
         ),
     ],
     cmdclass={'build_py': build_py},
