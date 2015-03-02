@@ -148,10 +148,13 @@ class BaseChangesConsumer(object):
                 'since': last_seq,
             })
 
-        self._couchdb.changes_feed(
-            self._feed_reader,
-            **feed_kwargs
-        )
+        try:
+            self._couchdb.changes_feed(
+                self._feed_reader,
+                **feed_kwargs
+            )
+        except:
+            logger.exception('Exception while processing changes! Exiting...')
 
         self._feed_reader.cleanup()
 
