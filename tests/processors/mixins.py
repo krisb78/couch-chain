@@ -11,6 +11,8 @@ class ProcessChangesTestMixin(object):
             self.samples
         )
 
+        self.processor.persist_changes(processed_changes)
+
         self.assertEqual(seq, self.samples[-1]['seq'])
 
         for sample, processed_change in zip(

@@ -69,17 +69,14 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
         if not processed_changes:
             return processed_changes, last_seq
 
-        self.bulk_save_changes(processed_changes)
-
         return processed_changes, last_seq
 
-    def bulk_save_changes(self, processed_changes):
+    def persist_changes(self, processed_changes):
         """Stores the processed changes in es.
 
         :param processed_changes: a list of (doc, rev, seq) tuples.
 
         """
-
         bulk_ops = []
 
         for (doc, rev, seq, ) in processed_changes:
@@ -91,13 +88,15 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
         try:
             return_value = self._es.bulk(
                 bulk_ops,
-                refresh=True
+                timeout=self._bulk_timeout,
+                request_timeout=self._bulk_timeout
             )
         except:
             logger.exception('Failed to index documents!')
             error = True
         else:
             if return_value.get('errors'):
+                logger.debug('ES response: %s', return_value)
                 logger.error('Errors executing bulk!')
                 error = True
 

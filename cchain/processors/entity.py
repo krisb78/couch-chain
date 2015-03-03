@@ -54,13 +54,7 @@ class RedisEntityProcessor(base.BaseChangesProcessor):
 
         return (doc_id, rev, seq, )
 
-    def process_changes(self, changes_buffer):
-
-        processed_changes, last_seq = super(
-            RedisEntityProcessor,
-            self
-        ).process_changes(changes_buffer)
-
+    def persist_changes(self, processed_changes):
         now = datetime.datetime.now()
         timestamp = time.mktime(now.timetuple())
 
@@ -80,5 +74,12 @@ class RedisEntityProcessor(base.BaseChangesProcessor):
             aggregate='MIN'
         )
         redis_server.delete([source_set_name])
+
+    def process_changes(self, changes_buffer):
+
+        processed_changes, last_seq = super(
+            RedisEntityProcessor,
+            self
+        ).process_changes(changes_buffer)
 
         return processed_changes, last_seq
