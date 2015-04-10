@@ -89,5 +89,6 @@ class SimpleESChangesProcessorTestCase(
 
         self.processor._es.bulk.assert_called_once_with(
             self.expected_bulk_ops,
-            refresh=True
+            timeout=self.processor._bulk_timeout,
+            request_timeout=self.processor._bulk_timeout
         )

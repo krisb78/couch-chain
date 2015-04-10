@@ -48,11 +48,9 @@ class SimpleCouchdbChangesProcessor(base.BaseCouchdbChangesProcessor):
         if not processed_changes:
             return processed_changes, last_seq
 
-        self.bulk_save_changes(processed_changes)
-
         return processed_changes, last_seq
 
-    def bulk_save_changes(self, processed_changes):
+    def persist_changes(self, processed_changes):
         """Saves the processed changes in bulk.
 
         :param processed_changes: a list of (doc, rev, seq) tuples.

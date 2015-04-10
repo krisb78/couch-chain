@@ -54,13 +54,7 @@ class SimpleS3ChangesProcessor(base.BaseS3ChangesProcessor):
 
         return key_name
 
-    def process_changes(self, changes_buffer):
-
-        processed_changes, last_seq = super(
-            SimpleS3ChangesProcessor,
-            self
-        ).process_changes(changes_buffer)
-
+    def persist_changes(self, processed_changes):
         logger.debug(
             'Starting %d tasks to store documents...',
             len(processed_changes)
@@ -75,5 +69,12 @@ class SimpleS3ChangesProcessor(base.BaseS3ChangesProcessor):
 
         for key_name in key_names:
             logger.debug('Key created in s3: %s', key_name)
+
+    def process_changes(self, changes_buffer):
+
+        processed_changes, last_seq = super(
+            SimpleS3ChangesProcessor,
+            self
+        ).process_changes(changes_buffer)
 
         return processed_changes, last_seq

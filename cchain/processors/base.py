@@ -13,6 +13,17 @@ logger = logging.getLogger(__name__)
 
 class BaseChangesProcessor(object):
 
+    def persist_changes(self, processed_changes):
+        """Override this with code that persists your processed changes.
+        This should either succeed or raise an exception.
+
+        :param processed_changes: changes returned by the `process_changes`
+            method
+
+        :returns: None
+
+        """
+
     def process_changes(self, changes_buffer):
         """Extracts processed docs from the changes buffer.
 
@@ -116,7 +127,7 @@ class BaseDocChangesProcessor(BaseChangesProcessor):
 
 class BaseESChangesProcessor(BaseDocChangesProcessor):
 
-    def __init__(self, es_urls, es_index, **kwargs):
+    def __init__(self, es_urls, es_index, bulk_timeout=60, **kwargs):
         """
 
         :param es_urls: Urls of ES nodes.
@@ -129,6 +140,7 @@ class BaseESChangesProcessor(BaseDocChangesProcessor):
             self
         ).__init__(**kwargs)
 
+        self._bulk_timeout = bulk_timeout
         self._es = elasticsearch.Elasticsearch(es_urls)
         self._es_index = es_index
 
