@@ -50,10 +50,12 @@ class SimpleCouchdbChangesProcessor(base.BaseCouchdbChangesProcessor):
 
         return processed_changes, last_seq
 
-    def persist_changes(self, processed_changes):
-        """Saves the processed changes in bulk.
+    def merge_changes(self, processed_changes):
+        """Merges the incoming changes with existing documents, if any.
 
         :param processed_changes: a list of (doc, rev, seq) tuples.
+
+        :returns: a list of documents to store in couch.
 
         """
 
@@ -71,10 +73,20 @@ class SimpleCouchdbChangesProcessor(base.BaseCouchdbChangesProcessor):
         for existing_result, processed_doc in zip(
             existing_results, processed_docs
         ):
-
             value = existing_result.get('value')
             if value is not None:
                 processed_doc['_rev'] = value['rev']
+
+        return processed_docs
+
+    def persist_changes(self, processed_changes):
+        """Saves the processed changes in bulk.
+
+        :param processed_changes: a list of (doc, rev, seq) tuples.
+
+        """
+
+        processed_docs = self.merge_changes(processed_changes)
 
         error = False
 
