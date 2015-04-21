@@ -56,7 +56,8 @@ class MPFeedReader(base.ChangesFeedReader):
             logger.debug('Got processed_changes with last seq: %s', last_seq)
             # If this succeeds, go on and save the sequence to the file,
             # otherwise break spectacularly.
-            self._processor.persist_changes(processed_changes)
+            if processed_changes:
+                self._processor.persist_changes(processed_changes)
 
             if last_seq is not None:
                 self._seqtracker.put_seq(last_seq)

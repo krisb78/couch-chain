@@ -64,7 +64,8 @@ class ChangesFeedReader(pycouchdb.feedreader.BaseFeedReader):
                 self._buffer
             )
 
-            self._processor.persist_changes(processed_changes)
+            if processed_changes:
+                self._processor.persist_changes(processed_changes)
         except processors_exceptions.ProcessingError:
             raise pycouchdb.exceptions.FeedReaderExited
 
