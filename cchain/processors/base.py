@@ -132,6 +132,8 @@ class BaseESChangesProcessor(BaseDocChangesProcessor):
 
         :param es_urls: Urls of ES nodes.
         :param es_index: the name of the index to store documents in.
+        :param bulk_timeout: The timeout for bulk requests to the target
+            database (in seconds).
 
         """
 
