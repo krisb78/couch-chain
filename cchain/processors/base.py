@@ -127,7 +127,14 @@ class BaseDocChangesProcessor(BaseChangesProcessor):
 
 class BaseESChangesProcessor(BaseDocChangesProcessor):
 
-    def __init__(self, es_urls, es_index, bulk_timeout=60, **kwargs):
+    def __init__(
+        self,
+        es_urls,
+        es_index,
+        bulk_timeout='60s',
+        request_timeout=60,
+        **kwargs
+    ):
         """
 
         :param es_urls: Urls of ES nodes.
@@ -143,6 +150,7 @@ class BaseESChangesProcessor(BaseDocChangesProcessor):
         ).__init__(**kwargs)
 
         self._bulk_timeout = bulk_timeout
+        self._request_timeout = request_timeout
         self._es = elasticsearch.Elasticsearch(es_urls)
         self._es_index = es_index
 

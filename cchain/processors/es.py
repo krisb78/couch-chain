@@ -88,9 +88,8 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
         try:
             return_value = self._es.bulk(
                 bulk_ops,
-                # Es wants timeouts in miliseconds, so multiply by 1000
-                timeout=self._bulk_timeout * 1000,
-                request_timeout=self._bulk_timeout * 1000
+                timeout=self._bulk_timeout,
+                request_timeout=self._request_timeout
             )
         except:
             logger.exception('Failed to index documents!')
