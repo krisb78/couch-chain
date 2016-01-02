@@ -1,3 +1,4 @@
+import copy
 import logging
 
 from cchain.processors import base
@@ -117,8 +118,13 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
 
         ops = []
 
+        doc_to_index = copy.deepcopy(doc)
+
+        # TODO: Probably should pop other "meta" properties here...
+        doc_id = doc_to_index.pop('_id')
+
         op_data = {
-            '_id': doc['_id'],
+            '_id': doc_id,
             '_type': self.get_type(doc),
             '_index': self.get_index(doc),
         }
@@ -137,7 +143,7 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
             }
             ops.append(op_dict)
             data_dict = {
-                'doc': doc,
+                'doc': doc_to_index,
                 'doc_as_upsert': True
             }
             ops.append(data_dict)
