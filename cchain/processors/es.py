@@ -25,12 +25,14 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
 
         """
 
+        self._retry_on_conflict = kwargs.pop('retry_on_conflict', 3)
+        self._auto_open = kwargs.pop('auto_open', False)
+
         super(
             SimpleESChangesProcessor,
             self
         ).__init__(es_urls, es_index, **kwargs)
 
-        self._retry_on_conflict = kwargs.pop('retry_on_conflict', 3)
         self._es_type = es_type
 
     def get_index(self, doc):
@@ -97,12 +99,49 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
             error = True
         else:
             if return_value.get('errors'):
+                if self._auto_open:
+                    return self.force_into_closed(
+                        return_value, processed_changes
+                    )
+
                 logger.debug('ES response: %s', return_value)
                 logger.error('Errors executing bulk!')
                 error = True
 
         if error:
             raise exceptions.ProcessingError
+
+    def force_into_closed(self, return_value, processed_changes):
+        """Handle "index closed" errors by opening relevant indices and
+        inserting changes again.
+
+        :param return_value: The value returned from the initial bulk upsert
+            call.
+        :param processed_changes: changes originally submitted for processing.
+
+        """
+
+        items = return_value['items']
+        closed_indices = set([])
+        changes_to_reprocess = []
+
+        for item, change in zip(items, processed_changes):
+            result = item.get('update') or item.get('delete')
+            error = result.get('error')
+
+            if not error:
+                continue
+
+            if error['reason'] == 'closed':
+                closed_indices.add(error['index'])
+
+            changes_to_reprocess.append(change)
+
+        logger.debug('Opening indices: %s', closed_indices)
+        for index in closed_indices:
+            self._es.indices.open(index)
+
+        return self.persist_changes(changes_to_reprocess)
 
     def get_ops_for_bulk(self, doc):
         """Returns a list of operations to be performed in elasticsearch
