@@ -35,6 +35,15 @@ class ChangesFeedReader(pycouchdb.feedreader.BaseFeedReader):
             self._buffer.append(change_line)
             logger.debug('Change added to buffer: %s', change_line)
 
+        self.flush_if_needed()
+
+    def flush_if_needed(self):
+        """Flushes the buffer if necessary, i.e., either the number of
+        buffered changes or the waiting time goes beyond the relevant
+        threshold.
+
+        """
+
         now = datetime.datetime.now()
 
         waiting_time = now - self._last_flush_time
@@ -42,11 +51,16 @@ class ChangesFeedReader(pycouchdb.feedreader.BaseFeedReader):
         waits_too_long = waiting_time > self._flush_interval
 
         if (len(self._buffer) >= self._limit) or waits_too_long:
+            logger.debug(
+                'Flushing %d changes, waited %s',
+                len(self._buffer),
+                waiting_time
+            )
             self.flush_buffer()
 
     def process_heartbeat(self):
         logger.debug('Heartbeat received.')
-        self.flush_buffer()
+        self.flush_if_needed()
 
     def on_message(self, change_line):
         logger.debug('Change received: %s', change_line)
