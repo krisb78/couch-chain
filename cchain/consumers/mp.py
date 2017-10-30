@@ -47,17 +47,21 @@ class MPFeedReader(base.ChangesFeedReader):
 
         while True:
 
-            logger.debug('Waiting for persist task...')
+            logger.debug('Waiting for data to persist...')
             (processed_changes, last_seq) = self._persist_queue.get()
 
             if processed_changes is None:
                 logger.info('Terminating sequence tracker.')
+                self._persist_queue.task_done()
+                break
 
             logger.debug('Got processed_changes with last seq: %s', last_seq)
             # If this succeeds, go on and save the sequence to the file,
             # otherwise break spectacularly.
             if processed_changes:
                 self._processor.persist_changes(processed_changes)
+
+            self._persist_queue.task_done()
 
             if last_seq is not None:
                 self._seqtracker.put_seq(last_seq)
@@ -105,7 +109,11 @@ class MPFeedReader(base.ChangesFeedReader):
         # TODO(kris): Sort it out properly.
         def purge_queue(_):
             while True:
-                self._persist_queue.get_nowait()
+                try:
+                    self._persist_queue.get_nowait()
+                    self._persist_queue.task_done()
+                except Queue.Empty:
+                    break
 
         # Purge the queue if nobody is reading from it anymore.
         self._seq_tracking_future.add_done_callback(
@@ -120,6 +128,7 @@ class MPFeedReader(base.ChangesFeedReader):
 
         # Write a termination sequence to the queue, so that the sequence
         # tracker can exit.
+        logger.debug('Writing termination sequence to persist queue...')
         self._persist_queue.put((None, None))
 
     def read_changes(self):
