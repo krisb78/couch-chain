@@ -74,11 +74,12 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
 
         return processed_changes, last_seq
 
-    def persist_changes(self, processed_changes):
+    def persist_changes(self, processed_changes, exit_on_fail=False):
         """Stores the processed changes in es.
 
         :param processed_changes: a list of (doc, rev, seq) tuples.
-
+        :param exit_on_fail: a boolean to determine if an exception should be raised
+            if ElasticSearch index errors occur.
         """
         bulk_ops = []
 
@@ -99,7 +100,7 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
             error = True
         else:
             if return_value.get('errors'):
-                if self._auto_open:
+                if self._auto_open and exit_on_fail is False:
                     return self.force_into_closed(
                         return_value, processed_changes
                     )
@@ -141,7 +142,10 @@ class SimpleESChangesProcessor(base.BaseESChangesProcessor):
         for index in closed_indices:
             self._es.indices.open(index)
 
-        return self.persist_changes(changes_to_reprocess)
+        return self.persist_changes(
+            changes_to_reprocess,
+            exit_on_fail=True
+        )
 
     def get_ops_for_bulk(self, doc):
         """Returns a list of operations to be performed in elasticsearch
