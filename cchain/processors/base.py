@@ -221,3 +221,4 @@ class BaseS3ChangesProcessor(BaseDocChangesProcessor):
 
     def cleanup(self):
         self._executor.shutdown()
+

@@ -1,6 +1,8 @@
 import logging
 import os
 
+import pycouchdb
+
 
 logger = logging.getLogger(__name__)
 
@@ -31,7 +33,7 @@ class BaseSeqTracker(object):
         raise NotImplementedError
 
 
-class FilebasedSeqTracker(object):
+class FilebasedSeqTracker(BaseSeqTracker):
     """Keeps a change sequence in a file.
 
     """
@@ -67,3 +69,49 @@ class FilebasedSeqTracker(object):
     def cleanup(self):
 
         self._seq_file.close()
+
+
+class CouchDBSeqTracker(BaseSeqTracker):
+
+    def __init__(self, couchdb_uri, couchdb_name, seq_doc_id):
+        """Reads the current version of the sequence documents from
+        the database and stores it on the instance.
+
+        """
+
+        server = pycouchdb.Server(couchdb_uri)
+        self._couchdb = server.database(couchdb_name)
+
+        try:
+            seq_doc = self._couchdb.get(seq_doc_id)
+        except pycouchdb.exceptions.NotFound:
+            seq_doc = {
+                '_id': seq_doc_id,
+            }
+
+        self._seq_doc = seq_doc
+
+        super(
+            CouchDBSeqTracker,
+            self
+        ).__init__()
+
+    def put_seq(self, seq):
+        """Writes the new seq to the database. Will break when there is an
+        update conflict.
+
+        """
+
+        self._seq_doc['seq'] = seq
+
+        self._seq_doc = self._couchdb.save(self._seq_doc)
+
+    def get_seq(self):
+        """Returns the current sequence known by the tracker.
+
+        """
+
+        return self._seq_doc.get('seq', '')
+
+    def cleanup(self):
+        pass
