@@ -105,13 +105,18 @@ class CouchDBSeqTracker(BaseSeqTracker):
         self._seq_doc['seq'] = seq
 
         self._seq_doc = self._couchdb.save(self._seq_doc)
+        logger.info('Put seq: %s', seq)
 
     def get_seq(self):
         """Returns the current sequence known by the tracker.
 
         """
 
-        return self._seq_doc.get('seq', '')
+        seq = self._seq_doc.get('seq', '')
+
+        logger.info('Got seq: %s' % seq)
+
+        return seq
 
     def cleanup(self):
         pass
