@@ -27,7 +27,6 @@ setuptools.setup(
         'pycouchdb',
         'requests',
         'urllib3',
-        'wsgiref',
         'redis',
     ],
     dependency_links=[

@@ -1,5 +1,5 @@
 import datetime
-import Queue
+import queue
 
 import futures
 import logging
@@ -94,7 +94,7 @@ class MPFeedReader(base.ChangesFeedReader):
         self._changes_in.close()
 
         # The queue to store `persist_changes` tasks on.
-        self._persist_queue = Queue.Queue(maxsize=self.task_queue_length)
+        self._persist_queue = queue.Queue(maxsize=self.task_queue_length)
 
         self._persist_executor = futures.ThreadPoolExecutor(
             max_workers=1
@@ -112,7 +112,7 @@ class MPFeedReader(base.ChangesFeedReader):
                 try:
                     self._persist_queue.get_nowait()
                     self._persist_queue.task_done()
-                except Queue.Empty:
+                except queue.Empty:
                     break
 
         # Purge the queue if nobody is reading from it anymore.
