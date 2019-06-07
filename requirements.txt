@@ -1,7 +1,6 @@
 boto==2.36.0
 couch-chain==0.1
 elasticsearch==1.4.0
-futures==2.2.0
 gnureadline==6.3.3
 ipython==3.0.0-rc1
 mock==1.0.1

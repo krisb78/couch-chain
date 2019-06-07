@@ -20,7 +20,6 @@ setuptools.setup(
         'boto',
         'futures',
         'elasticsearch',
-        'futures',
         'gnureadline',
         'ipython',
         'mock',

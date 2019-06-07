@@ -1,10 +1,11 @@
 import datetime
 import queue
 
-import futures
 import logging
 import multiprocessing
 import pycouchdb
+
+from concurrent import futures
 
 from . import base
 
