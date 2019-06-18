@@ -17,7 +17,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     zip_safe=False,
     install_requires=[
-        'boto',
+        'boto3',
         'futures',
         'elasticsearch',
         'gnureadline',

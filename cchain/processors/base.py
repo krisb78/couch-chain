@@ -1,7 +1,7 @@
 import copy
 import logging
 
-import boto
+import boto3
 import elasticsearch
 import pycouchdb
 
@@ -204,12 +204,13 @@ class BaseS3ChangesProcessor(BaseDocChangesProcessor):
             self
         ).__init__(**kwargs)
 
-        conn = boto.connect_s3(
+        s3 = boto3.resource(
+            's3',
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key
         )
 
-        bucket = conn.get_bucket(bucket_name)
+        bucket = s3.Bucket(bucket_name)
 
         self._bucket = bucket
 

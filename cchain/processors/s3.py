@@ -1,3 +1,4 @@
+import io
 import json
 import logging
 
@@ -45,12 +46,16 @@ class SimpleS3ChangesProcessor(base.BaseS3ChangesProcessor):
 
         key_name = self.get_s3_key_name(doc)
 
-        key = self._bucket.new_key(key_name=key_name)
+        key = self._bucket.Object(key_name)
 
         doc_body = json.dumps(doc)
 
-        key.set_contents_from_string(doc_body)
-        key.set_metadata('seq', seq)
+        key.put(
+            Body=doc_body,
+            Metadata={
+                'seq': str(seq)
+            }
+        )
 
         return key_name
 
