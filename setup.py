@@ -18,7 +18,6 @@ setuptools.setup(
     zip_safe=False,
     install_requires=[
         'boto3',
-        'futures',
         'elasticsearch',
         'gnureadline',
         'ipython',
